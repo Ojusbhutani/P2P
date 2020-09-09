@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-container class="fill-height" fluid >
+    <v-container class="fill-height" fluid>
       <v-row align="center" justify="center">
         <v-col cols="12" sm="8" md="8">
           <v-card class="elevation-12">
@@ -31,29 +31,31 @@
                           name="Email"
                           prepend-icon="mdi-email"
                           type="text"
-                          color="white"
-                          v-model="Email"
+                          :rules="[rules.emailRule]"
+                          v-model="email"
                           required
+                          color="primary"
                         ></v-text-field>
                         <v-text-field
                           id="password"
                           label="Password"
                           name="Password"
                           prepend-icon="mdi-lock"
-                          type="password"
-                          color="white"
+                          :rules="[rules.minlength]"
+                          :type="show3 ? 'text' : 'password'"
+                          :append-icon="show3 ? 'mdi-eye' : 'mdi-eye-off'"
                           v-model="password"
                           required
+                          color="primary"
+                          @click:append="show3 = !show3"
                         ></v-text-field>
                       </v-form>
                       <div style="text-align:center;">
-                        <v-btn text>
-                          <h4 class="text-center mt-3">Forgot your password</h4>
-                        </v-btn>
+                        <v-btn text>Forgot your password</v-btn>
                       </div>
                     </v-card-text>
                     <div class="text-center mt-3">
-                      <v-btn rounded dark>SIGN IN</v-btn>
+                      <v-btn rounded dark @click="validsignin">SIGN IN</v-btn>
                     </div>
                   </v-col>
                   <v-col cols="12" md="4">
@@ -94,49 +96,64 @@
                           name="Firstname"
                           prepend-icon="mdi-account"
                           type="text"
-                          color="white"
+                          :rules="[rules.minlength]"
                           v-model="firstname"
                           required
+                          color="primary"
                         ></v-text-field>
                         <v-text-field
                           label="Lastname"
                           name="Lastname"
                           prepend-icon="mdi-account"
                           type="text"
-                          color="white"
                           v-model="lastname"
+                          color="primary"
                         ></v-text-field>
                         <v-select
                           label="Gender"
                           name="Gender"
                           prepend-icon="mdi-gender-male-female-variant"
                           :items="Gender"
-                          color="white"
                           v-model="gender"
                           required
+                          color="primary"
                         ></v-select>
                         <v-text-field
                           label="Email"
                           name="Email"
                           prepend-icon="mdi-email"
                           type="text"
-                          color="white"
-                          v-model="email"
+                          :rules="[rules.minlength,rules.emailRule]"
+                          v-model="Email"
                           required
+                          color="primary"
+                        ></v-text-field>
+                        <v-text-field
+                          id="password"
+                          label="Password"
+                          name="Password"
+                          prepend-icon="mdi-lock"
+                          :type="show4 ? 'text' : 'password'"
+                          :append-icon="show4 ? 'mdi-eye' : 'mdi-eye-off'"
+                          v-model="Password"
+                          required
+                          color="primary"
+                          @click:append="show4 = !show4"
+                          :rules="[rules.minlength]"
                         ></v-text-field>
                         <v-select
                           label="Institute"
                           name="Institue"
                           prepend-icon="mdi-school"
                           :items="items"
-                          color="white"
                           v-model="institute"
                           required
+                          color="primary"
                         ></v-select>
                       </v-form>
                     </v-card-text>
                     <div class="text-center mt-3">
-                      <v-btn rounded dark>CREATE ACCOUNT</v-btn>
+                      <v-btn @click="validsignup" rounded dark>CREATE ACCOUNT</v-btn>
                     </div>
                   </v-col>
                   <v-col cols="12" md="4">
@@ -155,24 +172,81 @@
         </v-col>
       </v-row>
     </v-container>
+    <v-snackbar v-model="showSnackbar" app bottom :color="color" rounded>
+      {{ snackbarMessage }}
+      <template v-slot:action="{ attrs }">
+        <v-btn icon text v-bind="attrs" @click="showSnackbar = false">
+          <v-icon>mdi-close-circle-outline</v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 <script>
 export default {
-  data: () => ({
-    step: 1,
-    items: ["IIT BHU", "IIT Bombay", "IIT Madras", "IIT Delhi"],
-    Gender: ["Male", "Female", "Others"],
-    Email: "",
-    password: "",
-    firstname: "",
-    lastname: "",
-    email: "",
-    institute: "",
-    gender: "",
-  }),
+  data() {
+    return {
+      step: 1,
+      items: ["IIT BHU", "IIT Bombay", "IIT Madras", "IIT Delhi"],
+      Gender: ["Male", "Female", "Others"],
+      Email: "",
+      password: "",
+      firstname: "",
+      lastname: "",
+      email: "",
+      institute: "",
+      Password: "",
+      gender: "",
+      snackbarMessage: "",
+      showSnackbar: false,
+      show3: false,
+      show4: false,
+      color: 'error',
+      mailPattern: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+      rules: {
+        minlength: (v) => !!v || "Required!",
+        optionalMinLength: (v) => !!v || "Length should not be zero!",
+        emailRule: (v) => this.mailPattern.test(v) || "Invalid email!",
+      },
+    };
+  },
   props: {
     source: String,
+  },
+  methods: {
+    displaySnackbar(message, color) {
+      this.snackbarMessage = message;
+      this.color = color || "error";
+      this.showSnackbar = true;
+    },
+    validsignin() {
+      if (this.email.length > 0 && this.mailPattern.test(this.email)) {
+        if (this.password.length > 0) {
+          //this.displaySnackbar("Successfully signed in", "success");
+        } else {
+          this.displaySnackbar("Password required", "error");
+        }
+      } else this.displaySnackbar("Invalid email", "error");
+    },
+    validsignup() {
+      if (this.firstname.length > 0) {
+        if (this.gender&&this.gender.length>0) {
+          if (this.Email.length > 0 && this.mailPattern.test(this.Email)) {
+            if (this.Password.length > 0) {
+              if(this.institute&&this.institute.length>0){
+                this.displaySnackbar("Successfully Signed Up", "success");
+              }else{
+                  this.displaySnackbar("Required Institue", "error");
+              }
+            } else {
+              this.displaySnackbar("Password required", "error");
+            }
+          } else this.displaySnackbar("Invalid Email", "error");
+        } else this.displaySnackbar("Required Gender", "error");
+      } else {
+        this.displaySnackbar("Required Firstname", "error");
+      }
+    },
   },
 };
 </script>
