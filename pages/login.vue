@@ -55,7 +55,7 @@
                       </div>
                     </v-card-text>
                     <div class="text-center mt-3">
-                      <v-btn rounded dark @click="validsignin">SIGN IN</v-btn>
+                      <v-btn rounded dark @click="ValidSignin">SIGN IN</v-btn>
                     </div>
                   </v-col>
                   <v-col cols="12" md="4">
@@ -97,7 +97,7 @@
                           prepend-icon="mdi-account"
                           type="text"
                           :rules="[rules.minlength]"
-                          v-model="firstname"
+                          v-model="FirstName"
                           required
                           color="primary"
                         ></v-text-field>
@@ -106,7 +106,7 @@
                           name="Lastname"
                           prepend-icon="mdi-account"
                           type="text"
-                          v-model="lastname"
+                          v-model="LastName"
                           color="primary"
                         ></v-text-field>
                         <v-select
@@ -139,7 +139,20 @@
                           required
                           color="primary"
                           @click:append="show4 = !show4"
-                          :rules="[rules.minlength]"
+                          :rules="[rules.psmin]"
+                        ></v-text-field>
+                        <v-text-field
+                          id="confirm password"
+                          label="Confirm Password"
+                          name="CPassword"
+                          prepend-icon="mdi-lock"
+                          :type="show5 ? 'text' : 'password'"
+                          :append-icon="show5 ? 'mdi-eye' : 'mdi-eye-off'"
+                          v-model="CPassword"
+                          required
+                          color="primary"
+                          @click:append="show5 = !show5"
+                          :rules="[rules.psmin]"
                         ></v-text-field>
                         <v-select
                           label="Institute"
@@ -153,7 +166,7 @@
                       </v-form>
                     </v-card-text>
                     <div class="text-center mt-3">
-                      <v-btn @click="validsignup" rounded dark>CREATE ACCOUNT</v-btn>
+                      <v-btn @click="ValidSignup" rounded dark>CREATE ACCOUNT</v-btn>
                     </div>
                   </v-col>
                   <v-col cols="12" md="4">
@@ -186,28 +199,31 @@
 export default {
   data() {
     return {
-      step: 1,
+      step: 1, //window change on clicking signup or signin
       items: ["IIT BHU", "IIT Bombay", "IIT Madras", "IIT Delhi"],
       Gender: ["Male", "Female", "Others"],
-      Email: "",
+      Email: "", //capital duplicate fields like Email indicate signup form
       password: "",
-      firstname: "",
-      lastname: "",
+      FirstName: "",
+      LastName: "",
       email: "",
       institute: "",
       Password: "",
+      CPassword: "",
       gender: "",
       snackbarMessage: "",
-      showSnackbar: false,
-      show3: false,
+      showSnackbar: false, //display snackbar
+      show3: false, //eye icon in password
       show4: false,
-      color: 'error',
+      show5: false,
+      color: "error", //snackbar
       mailPattern: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
       rules: {
         minlength: (v) => !!v || "Required!",
-        optionalMinLength: (v) => !!v || "Length should not be zero!",
         emailRule: (v) => this.mailPattern.test(v) || "Invalid email!",
-      },
+        psmin: (v) =>
+          v.length >= 8 || "Password should be atleast 8 characters ",
+      }, //basic check for fields
     };
   },
   props: {
@@ -219,7 +235,8 @@ export default {
       this.color = color || "error";
       this.showSnackbar = true;
     },
-    validsignin() {
+    ValidSignin() {
+      // checks email first then password
       if (this.email.length > 0 && this.mailPattern.test(this.email)) {
         if (this.password.length > 0) {
           //this.displaySnackbar("Successfully signed in", "success");
@@ -228,18 +245,28 @@ export default {
         }
       } else this.displaySnackbar("Invalid email", "error");
     },
-    validsignup() {
-      if (this.firstname.length > 0) {
-        if (this.gender&&this.gender.length>0) {
+    ValidSignup() {
+      //checks the fields accordingly to the form if first is ok it goes onto second
+      if (this.FirstName.length > 0) {
+        if (this.gender && this.gender.length > 0) {
           if (this.Email.length > 0 && this.mailPattern.test(this.Email)) {
-            if (this.Password.length > 0) {
-              if(this.institute&&this.institute.length>0){
-                this.displaySnackbar("Successfully Signed Up", "success");
-              }else{
+            if (this.Password.length > 7) {
+              if (this.CPassword === this.Password) {
+                if (this.institute && this.institute.length > 0) {
+                  this.displaySnackbar("Successfully Signed Up", "success");
+                } else {
                   this.displaySnackbar("Required Institue", "error");
+                }
+              } else {
+                this.displaySnackbar("Passwords dont match", "error");
               }
-            } else {
+            } else if (!this.Password.length) {
               this.displaySnackbar("Password required", "error");
+            } else {
+              this.displaySnackbar(
+                "Password should be minimum of 8 characters",
+                "error"
+              );
             }
           } else this.displaySnackbar("Invalid Email", "error");
         } else this.displaySnackbar("Required Gender", "error");
